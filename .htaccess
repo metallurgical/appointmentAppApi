@@ -1,0 +1,12 @@
+RewriteEngine on
+
+
+#htaccess allow CORS //make sure disable option on restserver codeigniter
+#Header set Access-Control-Allow-Origin "*"
+#Header set Access-Control-Allow-Methods: "GET,POST,OPTIONS,DELETE,PUT"
+
+#RewriteBase /zafea.my/
+RewriteCond $1 !^(index\.php|resources|robots\.txt)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php/$1 [L,QSA]
