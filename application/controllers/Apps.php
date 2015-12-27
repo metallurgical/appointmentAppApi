@@ -59,7 +59,7 @@ class Apps extends REST_Controller
         */
         
 
-        if(($this->get('val') && !$this->get('k ey')) || ($this->get('key') && !$this->get('val')))
+        if(($this->get('val') && !$this->get('key')) || ($this->get('key') && !$this->get('val')))
         {
         	$this->response(array('error' => 'The key parameter and value parameter must have'), 400);
         }
@@ -143,6 +143,61 @@ class Apps extends REST_Controller
     }
 
 
+    /*================================================*/
+    function login_get() 
+    {
+        /************** THIS FUNCTION WILL CHANGE DEPEND ON COMPLEXITY OF CLIENT SIDE REQUESTED ****************************
+        *
+        *
+        */
+        
+        
+        $type    =  $this->get('type'); // get type of table need to fetch data eg:|customers(user/type/customers)|
+        $key     =  $this->get('key');  // UNIQUE ID in table to fetch from eg : |customers(user/type/customers/fetch/all@specified/key/customer_id)
+        $key1     =  $this->get('key1');
+
+
+        $table   = $type;               // asign type into table variable
+        
+        
+        $value = $this->get('val');
+        $value1 = $this->get('val1');
+
+        //$where = &$same_where; 
+        $where = array($key => $value, $key1 => $value1 );
+
+         if (false !== strpos($this->url,'val')) //if have val string in url - must be include the key parameter also
+         {
+             
+             $data[$table] = $this->m->get_all_rows($table,$where, false, false, false, false);
+
+         }
+         else
+         {
+
+              $data[$table] = $this->m->get_all_rows($table,false, false, false, false, false);
+         }
+             
+      
+
+        /*========================================== RESULTS RESPOND =========================================      
+         *
+         * if got the data in query, return respond from the server to the client using exact format
+         */
+        if($data)
+        {
+            $this->response($data, 200); // 200 being the HTTP response code
+        }
+
+        else
+        {
+            $this->response(array('error' => 'User could not be found'), 404);
+        }
+        /*========================================= END RESULT ================================================*/
+    }
+    /*========================================================*/
+
+
     public function dataAll_options(){
        
        /**
@@ -197,6 +252,7 @@ class Apps extends REST_Controller
             }            
                 $this->response(array('Respone'=> 'Multiple table Insert into table'), 200);
         }
+        
         // if no '-' detected
         // single table inserted function will triggered
         // use the array index 0
@@ -210,7 +266,8 @@ class Apps extends REST_Controller
                 $data_val = $arrayData[0];
             }
             
-            $doAdd = $this->m->insert_new_data($data_val,$table); 
+            $doAdd = $this->m->insert_new_data($data_val,$table);
+            $this->response( array( 'id' => $doAdd ), 200 );
         }
     
         

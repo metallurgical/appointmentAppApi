@@ -115,9 +115,15 @@ class Appointment_model extends CI_Model {
     {
 
         $this->db->insert($table,$arrayData);
-        //$this->db->_error_message();
-       // return  $this->db->_error_message();
-        return $this->db->insert_id();
+        if ( $this->db->affected_rows() > 0 ) {
+
+            return $this->db->insert_id();
+
+        } else {
+
+            $flag = false;
+            return $flag;
+        }
     }
 
 
@@ -134,6 +140,17 @@ class Appointment_model extends CI_Model {
 
         $this->db->where($where);
         $this->db->delete($table);
+
+        if ( $this->db->affected_rows() > 0 ) {
+
+            $flag = true;
+
+        } else {
+
+            $flag = false;
+        }
+
+        return $flag;
     }
 
 
