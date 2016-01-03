@@ -71,8 +71,9 @@ class Apps extends REST_Controller
         }
         
 		
-		$type    =  $this->get('type'); // get type of table need to fetch data eg:|customers(user/type/customers)|
-		$key     =  $this->get('key');  // UNIQUE ID in table to fetch from eg : |customers(user/type/customers/fetch/all@specified/key/customer_id)
+		$type    =  $this->get( 'type' ); // get type of table need to fetch data eg:|customers(user/type/customers)|
+		$key     =  $this->get( 'key' );  // UNIQUE ID in table to fetch from eg : |customers(user/type/customers/fetch/all@specified/key/customer_id)
+        $val     =  $this->get( 'val' );
 		$table   = $type;               // asign type into table variable
 		
 		
@@ -81,50 +82,54 @@ class Apps extends REST_Controller
 		$join_to = $this->get('jointo');
 		$join_to = explode('-', $join_to);
 
+        if ( preg_match('/-/i', $key ) ){
+
+           $arrResultKey = explode( '-', $key );
+           $arrResultVal = explode( '-', $val );
+
+            for( $i = 0, $length = count( $arrResultKey ); $i < $length; $i++ ) {
+                $where[$arrResultKey[$i]] = $arrResultVal[$i];
+            }
+
+        }
+        else{
+
+            $where = array( $key => $val );
+        }
+
         
-        if (false !== strpos($this->url,'joinid')) //if joinid name in url variable exist
+        if ( false !== strpos( $this->url,'joinid' ) ) //if joinid name in url variable exist
         {
         	$value = $this->get('val');
 
-        	if($value!="none")  // return join table with condition applied
-        	 {
-        	 	 $where = array($table.".".$key => $value);
-        	 	 $data[$table] = $this->m->get_data_join($table,$where, $join_to, $join_id, false, false);
+        	if ( false !== strpos( $this->url, 'key' ) )  // return join table with condition applied
+        	{
+        	 	$where = array($table.".".$key => $value);
+        	 	$data[$table] = $this->m->get_data_join($table, $where, $join_to, $join_id, false, false);
         	 	
-        	 }
+        	}
+            else {
+                $data[$table] = $this->m->get_data_join($table,false, $join_to, $join_id, false, false);
+            }
 
         }
         else
         {       
 
-        	/**
-        	 * if specified need and value for $key to fetch from eg : |customers(user/type/customers/val/2/key) == if no unique id just put none as a value
-        	 * @var [type]
-        	 */
-        	$value = $this->get('val');
-        	$where = &$same_where; 
-        	$where = array($key => $value);
-
-        	 if (false !== strpos($this->url,'val')) //if have val string in url - must be include the key parameter also
+        	 if ( false !== strpos( $this->url,'key' ) ) //if have val string in url - must be include the key parameter also
         	 {
         	 	 
-        	 	 $data[$table] = $this->m->get_all_rows($table,$same_where, false, false, false, false);
+        	 	 $data[$table] = $this->m->get_all_rows( $table,$where, false, false, false, false );
 
         	 }
         	 else
         	 {
 
-        	 	  $data[$table] = $this->m->get_all_rows($table,false, false, false, false, false);
+        	 	  $data[$table] = $this->m->get_all_rows( $table,false, false, false, false, false );
         	 }
         	 
         
     }
-
-
-
-    
-
-
 
 		/*========================================== RESULTS RESPOND =========================================		
     	 *
@@ -143,48 +148,50 @@ class Apps extends REST_Controller
     }
 
 
+    
+
     /*================================================*/
-    function login_get() 
+    function test_get() 
     {
-        /************** THIS FUNCTION WILL CHANGE DEPEND ON COMPLEXITY OF CLIENT SIDE REQUESTED ****************************
-        *
-        *
-        */
         
         
-        $type    =  $this->get('type'); // get type of table need to fetch data eg:|customers(user/type/customers)|
-        $key     =  $this->get('key');  // UNIQUE ID in table to fetch from eg : |customers(user/type/customers/fetch/all@specified/key/customer_id)
-        $key1     =  $this->get('key1');
+        $type = $this->get('type'); 
+        $key  = $this->get('key');
+        $val  = $this->get('val');
 
+        if ( preg_match('/-/i', $key ) ){
 
-        $table   = $type;               // asign type into table variable
-        
-        
-        $value = $this->get('val');
-        $value1 = $this->get('val1');
+           $arrResultKey = explode( '-', $key );
+           $arrResultVal = explode( '-', $val );
 
-        //$where = &$same_where; 
-        $where = array($key => $value, $key1 => $value1 );
+            for( $i = 0, $length = count( $arrResultKey ); $i < $length; $i++ ) {
+                $where[$arrResultKey[$i]] = $arrResultVal[$i];
+            }
 
-         if (false !== strpos($this->url,'val')) //if have val string in url - must be include the key parameter also
+        }
+        else{
+
+            $where = array( $key => $val );
+        }
+
+        $table  = $type; // table
+
+         if ( false !== strpos( $this->url,'key' ) ) // if exist key paramter, we know that they want to use where condition
          {
              
-             $data[$table] = $this->m->get_all_rows($table,$where, false, false, false, false);
+             $data[$table] = $this->m->get_all_rows( $table, $where, false, false, false, false);
 
          }
          else
          {
 
-              $data[$table] = $this->m->get_all_rows($table,false, false, false, false, false);
+              $data[$table] = $this->m->get_all_rows( $table,false, false, false, false, false);
          }
              
       
 
-        /*========================================== RESULTS RESPOND =========================================      
-         *
-         * if got the data in query, return respond from the server to the client using exact format
-         */
-        if($data)
+        
+        if( $data )
         {
             $this->response($data, 200); // 200 being the HTTP response code
         }
@@ -193,7 +200,7 @@ class Apps extends REST_Controller
         {
             $this->response(array('error' => 'User could not be found'), 404);
         }
-        /*========================================= END RESULT ================================================*/
+        
     }
     /*========================================================*/
 
@@ -425,3 +432,63 @@ class Apps extends REST_Controller
     }
 
 }
+
+
+
+
+
+
+
+/*
+testinggg
+ function test_get() 
+    {
+        
+        
+        $type = $this->get('type'); 
+        $key  = $this->get('key');
+        $val  = $this->get('val');
+
+        if ( preg_match('/-/i', $key ) ){
+
+           $arrResultKey = explode( '-', $key );
+           $arrResultVal = explode( '-', $val );
+
+            for( $i = 0, $length = count( $arrResultKey ); $i < $length; $i++ ) {
+                $where[$arrResultKey[$i]] = $arrResultVal[$i];
+            }
+
+        }
+        else{
+
+            $where = array( $key => $val );
+        }
+
+        $table  = $type; // table
+
+         if ( false !== strpos( $this->url,'key' ) ) // if exist key paramter, we know that they want to use where condition
+         {
+             
+             $data[$table] = $this->m->get_all_rows( $table, $where, false, false, false, false);
+
+         }
+         else
+         {
+
+              $data[$table] = $this->m->get_all_rows( $table,false, false, false, false, false);
+         }
+             
+      
+
+        
+        if( $data )
+        {
+            $this->response($data, 200); // 200 being the HTTP response code
+        }
+
+        else
+        {
+            $this->response(array('error' => 'User could not be found'), 404);
+        }
+        
+    }*/
