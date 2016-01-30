@@ -281,6 +281,48 @@ class Apps extends REST_Controller
           
     }
 
+    public function SendingEmail_get() {
+
+        $idDoc       = $this->get('docId');
+        $sesiId      = $this->get('sesiId');
+        $patientId   = $this->get('patientId');
+        
+        $docData     = $this->m->get_specified_row( 'docs', array( 'doc_id' => $idDoc ), false, false, false, false );
+        $sesiData    = $this->m->get_specified_row( 'sesi', array( 'sesi_id' => $sesiId ), false, false, false, false );
+        $patientData = $this->m->get_specified_row( 'patients', array( 'patient_id' => $patientId ), false, false, false, false ); 
+
+        $msg = 'Hello '.$docData['doc_name'].', there is a new patient who book your session '.$sesiData['sesi_session'].' at '.$sesiData['sesi_date'].'. Patient name is '.$patientData['patient_name'];
+
+        $this->load->helper('email');
+        $this->load->library('email');
+
+        $config['protocol']     ='smtp';
+        $config['smtp_host']    ='ssl://smtp.googlemail.com';
+        $config['smtp_port']    ='465';
+        $config['smtp_timeout'] ='30';
+        $config['smtp_user']    ='thunderwidedev@gmail.com';
+        $config['smtp_pass']    ='thunderwidedev@1234';
+        $config['charset']      ='utf-8';
+        $config['newline']      ="\r\n";
+        $config['wordwrap']     = TRUE;
+        $config['mailtype']     = 'text';
+        $this->email->initialize($config);
+
+        $this->email->from( 'Appointment Apps' );
+        $this->email->to( $docData['doc_email'] ); 
+        $this->email->subject('New patient book your session!');
+        $this->email->message( $msg );  
+      
+        // try send mail ant if not able print debug
+        if ( ! $this->email->send() ) {
+
+        }
+
+        $this->response( array('success'), 200 );
+
+
+    }
+
     public function dataAll_delete()
     {
         /************** THIS FUNCTION WILL CHANGE DEPEND ON COMPLEXITY OF CLIENT SIDE REQUESTED ****************************
